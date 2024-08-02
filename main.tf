@@ -13,16 +13,10 @@ terraform {
 # leave empty to read the settings from the AWS CLI configuration
 provider "aws" {}
 
-# use default VPC
-data "aws_vpc" "default" {
-  default = true
-}
-
 # Security Group
 resource "aws_security_group" "nginx_server_sg_tf" {
   name        = "nginx-server-sg-tf"
   description = "Allow HTTP to web server"
-  vpc_id      = data.aws_vpc.default.id
 
   # Allow inbound traffic on port 80
   ingress {
@@ -48,6 +42,10 @@ resource "aws_security_group" "nginx_server_sg_tf" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = "nginx-server-sg-tf"
+  }
 }
 
 # EC2 Instance
@@ -55,6 +53,7 @@ resource "aws_instance" "nginx_server_tf" {
   ami                    = "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64"
   instance_type          = "t2.micro"
   key_name               = "aws-ec2-key"
+  user_data              = file("init-script.sh")
   vpc_security_group_ids = [aws_security_group.nginx_server_sg_tf.id]
 
   tags = {

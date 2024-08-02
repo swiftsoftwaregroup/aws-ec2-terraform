@@ -40,6 +40,8 @@ Validate configuration:
 terraform validate
 ```
 
+### Deploy
+
 Preview infrastructure:
 
 ```bash
@@ -56,6 +58,15 @@ Check state:
 
 ```bash
 terraform show
+```
+
+### Test Deployment
+
+Check that you can browse the `nginx` default site:
+
+```bash 
+instance_public_ip=$(terraform output -json | jq -r '.instance_public_ip.value')
+open http://$instance_public_ip
 ```
 
 Connect to instance via SSH:
