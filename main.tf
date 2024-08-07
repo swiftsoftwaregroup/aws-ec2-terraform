@@ -49,12 +49,32 @@ resource "aws_security_group" "nginx_server_sg_tf" {
 }
 
 # EC2 Instance
+data "aws_ami" "amazon_linux_2023" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
 resource "aws_instance" "nginx_server_tf" {
-  ami                    = "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64"
+  ami                    = data.aws_ami.amazon_linux_2023.id
   instance_type          = "t2.micro"
   key_name               = "aws-ec2-key"
   user_data              = file("init-script.sh")
   vpc_security_group_ids = [aws_security_group.nginx_server_sg_tf.id]
+
+  root_block_device {
+    volume_type = "gp3"
+    volume_size = 8 # Size in GB
+  }
 
   tags = {
     Name = "nginx-server-tf"
